@@ -42,6 +42,7 @@ def copy_from_report(controller, copy_columns, formula_columns, report, tracker,
         closeout = report.get_cell_by_column_name(row, 'Job Status').value
         bill = report.get_cell_by_column_name(row, 'Billable').value
         if com_po and com_po != 'NO PO' and closeout == "CLOSEOUT" and bill == "YES":
+            #change closeout to closed here
             for name in copy_columns:
                 if name == 'Primary':
                     cell = report.get_cell_by_column_name(row, 'SITE ID')
@@ -69,7 +70,9 @@ def copy_from_report(controller, copy_columns, formula_columns, report, tracker,
                         wm_exists=True
                         for trow in tracker.get_rows():
                             tracker_com_po = tracker.get_cell_by_column_name(trow, 'COMCAST PO').value
-                            if tracker_com_po and com_po == tracker_com_po:
+                            print(tracker_com_po)
+                            print(com_po)
+                            if tracker_com_po and com_po == tracker_com_po:                            
                                 com_po_exists=True
             if not wm_exists and not com_po_exists:
                 wm_nums.append(wm_num)

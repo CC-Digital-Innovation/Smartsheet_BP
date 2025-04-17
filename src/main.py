@@ -1,8 +1,12 @@
 import smartsheetcontrol
 import smartsheetactions
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 from datetime import datetime
 import openpyxl
 import dotenv
+import smtplib
 from pathlib import PurePath
 import os
 from loguru import logger
@@ -36,7 +40,7 @@ tracker_update = smartsheet_controller.get_sheet(os.getenv("trackers"))
 for row_id in rows_moved:
     row = smartsheet_controller.get_row_by_id(os.getenv("trackers"), row_id)
     billable = tracker_update.get_cell_by_column_name(row, 'Billable Expense Sell').value
-    hourly = tracker_update.get_cell_by_column_name(row, 'Hrly Sell').value
+    hourly = tracker_update.get_cell_by_column_name(row, 'Hourly Sell').value
     excel_time_row = {}
     excel_travel_row = {}
     if (billable and hourly) and (billable > 0):
@@ -51,11 +55,11 @@ for row_id in rows_moved:
         excel_travel_row['amount'] = tracker_update.get_cell_by_column_name(row, 'Billable Expense Sell').value
         excel_rows.append(excel_time_row)
         excel_rows.append(excel_travel_row)
-print(sell_sum)
+logger.info(f"Weekly Total: {sell_sum}")
 
 #create excel template
 #column F is PO, M is month, P is Memo, S is amount, W is contract
-workbook = openpyxl.load_workbook('template.xlsx')
+workbook = openpyxl.load_workbook(PurePath('src/template.xlsx'))
 excel_sheet = workbook.active
 row_start=8
 for row in excel_rows:
@@ -71,8 +75,59 @@ for row in excel_rows:
     contract_cell.value = row['contract']
     row_start = row_start + 1
 
-
-workbook.save('template_filled.xlsx')
+date = TODAY.strftime("%m_%d_%Y")
+custname = os.getenv('Custname')
+custname_file = custname.replace(' ', '_')
+xl_sheet_name = f'{custname_file}_{date}.xlsx'
+workbook.save(xl_sheet_name)
 
 logger.debug(f"Excel template finished")
 #email results
+sender = os.getenv('noreplyaddress')
+receiverlist = os.getenv('emailto').split(',')
+subject = os.getenv('subject')
+message = MIMEMultipart("alternative")
+message["Subject"] = f"{subject} BILLING UPLOAD - {custname.upper()} - {sell_sum}"
+message["From"] = sender
+message["To"] = receiverlist[0]
+
+body = f"""
+Hello Team,
+ 
+The attached {custname} file has {len(excel_rows)} lines that total ${sell_sum}.
+ 
+Thank you,
+
+"""
+
+message.attach(MIMEText(body))
+
+with open(xl_sheet_name, "rb") as raw:
+    attachment = MIMEApplication(raw.read())	
+attachment.add_header('Content-Disposition', f"attachment; filename= {xl_sheet_name}") 
+message.attach(attachment)
+
+
+#Starts SMTP email server with TLS if enabled in config
+logger.debug("Starting SMTP server")
+serverName = os.getenv('MailServer')
+Port = os.getenv('MailPort')
+server = smtplib.SMTP(serverName, Port)
+server.ehlo()
+server.starttls()
+server.ehlo()
+server.login(os.getenv('SMTPUsername'), os.getenv('SMTPPassword'))
+
+
+
+# Sends email, and deletes temp files even if there was a problem sending the email
+logger.debug("Sending email")
+try:
+    server.sendmail(sender, receiverlist, message.as_string())
+except Exception as e:
+    logger.debug(e)
+finally:
+    # Deletes temporary files
+    logger.debug(f"Cleaning up")
+    os.remove(xl_sheet_name)
+server.close()
