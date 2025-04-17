@@ -20,9 +20,18 @@ def new_cell(column_name, cell_value, row, sheet, controller, tracker):
 
     controller.update_row(sheet, new_row)
 
+def closeout(controller, report, tracker, tracker_id, report_rows, tracker_rows):
+    for row in report_rows:
+        for report_row in report_rows:
+            new_cell('Job Status', 'CLOSED', report_row, report.source_sheets[row.sheet_id], controller, report.source_sheets[row.sheet_id])
+        for tracking_row in tracker_rows:
+            tracked_row = controller.get_row_by_id(tracker_id, tracking_row)
+            new_cell('Job Status', 'CLOSED', tracked_row, tracker, controller, tracker)
+
 def copy_from_report(controller, copy_columns, formula_columns, report, tracker, to_sheet_id, today):
     row_ids_copied =[]
     copy_rows = []
+    copied_from = []
 
     month = today.strftime('%B').upper() + ' ' + today.strftime('%Y')
 
@@ -62,27 +71,29 @@ def copy_from_report(controller, copy_columns, formula_columns, report, tracker,
                         'formula' : col.description,
                         'strict' : False})
             wm_exists = False
-            for row in tracker.get_rows():
-                tracker_wm_num = tracker.get_cell_by_column_name(row, 'WORK MARKET #').value
+            for trow in tracker.get_rows():
+                tracker_wm_num = tracker.get_cell_by_column_name(trow, 'WORK MARKET #').value
                 com_po_exists = False
                 if tracker_wm_num:
                     if (wm_num == int(tracker_wm_num)) or (wm_num in wm_nums):
                         wm_exists=True
-                        for trow in tracker.get_rows():
-                            tracker_com_po = tracker.get_cell_by_column_name(trow, 'COMCAST PO').value
-                            print(tracker_com_po)
-                            print(com_po)
-                            if tracker_com_po and com_po == tracker_com_po:                            
+                        for trow2 in tracker.get_rows():
+                            tracker_com_po = tracker.get_cell_by_column_name(trow2, 'COMCAST PO').value
+                            if tracker_com_po and com_po == tracker_com_po:
                                 com_po_exists=True
             if not wm_exists and not com_po_exists:
                 wm_nums.append(wm_num)
                 copy_rows.append(new_row)
+                copied_from.append(row)
     logger.debug(f"Pasting rows...")
     response = controller.add_rows(to_sheet_id, copy_rows)
     for row in response.result:
         row_ids_copied.append(row.id)
 
-    return row_ids_copied
+    return {
+        'ids_copied' : row_ids_copied,
+        'rows_copied': copied_from
+    }
 
 def add_billable_hours(controller, row_ids, tracker_id):
     tracker_upd = controller.get_sheet(tracker_id)
