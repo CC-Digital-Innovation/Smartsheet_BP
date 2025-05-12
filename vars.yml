@@ -1,0 +1,7 @@
+repo: https://github.com/CC-Digital-Innovation/Smartsheet_BP
+ssh_url: git@github.com:CC-Digital-Innovation/Smartsheet_BP.git
+branch: main
+project_root: src
+image: smartsheet-billing-prep
+manifest_path: kubernetes/deployment_cron.yml
+pipeline: smartsheet-billing-prep

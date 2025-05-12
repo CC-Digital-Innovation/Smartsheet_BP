@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: smartsheet-billing-prep
+  namespace: default
+spec:
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          annotations:
+            vault.hashicorp.com/agent-inject: 'true'
+            vault.hashicorp.com/role: 'smartsheet-billing-prep'
+            vault.hashicorp.com/agent-inject-secret-smartsheet-billing-prep: 'secret/smartsheet-billing-prep'
+            vault.hashicorp.com/agent-inject-template-smartsheet-billing-prep: |
+              {{- with secret "secret/smartsheet-billing-prep" -}}
+                export CUSTNAMES="{{ .Data.data.CUSTNAMES }}""
+                export REPORTS="{{ .Data.data.REPORTS }}""
+                export TRACKERS="{{ .Data.data.TRACKERS }}""
+                export API_KEY="{{ .Data.data.API_KEY }}""
+                export NOREPLYADDRESS="{{ .Data.data.NOREPLYADDRESS }}""
+                export SMTPPASSWORD="{{ .Data.data.SMTPPASSWORD }}""
+                export SMTPUSERNAME="{{ .Data.data.SMTPUSERNAME }}""
+                export EMAILTO="{{ .Data.data.EMAILTO }}""
+                export MAILPORT="{{ .Data.data.MAILPORT }}""
+                export MAILSERVER="{{ .Data.data.MAILSERVER }}""
+                export SUBJECT="{{ .Data.data.SUBJECT }}""
+              {{- end }}
+            vault.hashicorp.com/ca-cert: /run/secrets/kubernetes.io/serviceaccount/ca.crt
+            vault.hashicorp.com/agent-pre-populate-only: 'true'
+        spec:
+          containers:
+            - image: harbor.k3s.quokka.ninja/library/smartsheet-billing-prep
+              name: smartsheet-billing-prep
+              args: ['/bin/bash', '-c', '/vault/secrets/smartsheet-billing-prep && python ./src/main.py']
+          restartPolicy: Never
+          serviceAccountName: smartsheet-billing-prep
+      backoffLimit: 3
+  schedule: 0 8 * * 4
+  timeZone: America/New_York

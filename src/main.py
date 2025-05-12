@@ -13,7 +13,7 @@ from loguru import logger
 
 dotenv.load_dotenv(PurePath(__file__).with_name('.env'))
 
-smartsheet_controller = smartsheetcontrol.SmartsheetController(os.getenv('api_key'))
+smartsheet_controller = smartsheetcontrol.SmartsheetController(os.getenv('API_KEY'))
 
 
 TODAY = datetime.now()
@@ -21,9 +21,9 @@ TODAY = datetime.now()
 
 col_copy_list = ['Primary', 'WORK MARKET #', 'COMCAST PO', 'Job Status', 'Address', 'City', 'State', 'Zip Code', 'Secured Date']
 formula_list = ['WM Status' , 'WM Date', 'Tech Name', 'Total Hours Onsite from Main Tracker', 'WM Hours', 'Billable (from Tracker)', 'Billable Expense Sell', "Hourly Sell"]
-reports = os.getenv("reports").split(',')
-trackers = os.getenv("trackers").split(',')
-custnames = os.getenv("custnames").split(',')
+reports = os.getenv("REPORTS").split(',')
+trackers = os.getenv("TRACKERS").split(',')
+custnames = os.getenv("CUSTNAMES").split(',')
 
 
 for submission in zip(custnames, reports, trackers):
@@ -90,9 +90,9 @@ for submission in zip(custnames, reports, trackers):
 
         logger.debug(f"Excel template finished")
         #email results
-        sender = os.getenv('noreplyaddress')
-        receiverlist = os.getenv('emailto').split(',')
-        subject = os.getenv('subject')
+        sender = os.getenv('NOREPLYADDRESS')
+        receiverlist = os.getenv('EMAILTO').split(',')
+        subject = os.getenv('SUBJECT')
         message = MIMEMultipart("alternative")
         message["Subject"] = f"{subject} BILLING UPLOAD - {custname.upper()} - {sell_sum}"
         message["From"] = sender
@@ -117,13 +117,13 @@ for submission in zip(custnames, reports, trackers):
 
         #Starts SMTP email server with TLS if enabled in config
         logger.debug("Starting SMTP server")
-        serverName = os.getenv('MailServer')
-        Port = os.getenv('MailPort')
+        serverName = os.getenv('MAILSERVER')
+        Port = os.getenv('MAILPORT')
         server = smtplib.SMTP(serverName, Port)
         server.ehlo()
         server.starttls()
         server.ehlo()
-        server.login(os.getenv('SMTPUsername'), os.getenv('SMTPPassword'))
+        server.login(os.getenv('SMTPUSERNAME'), os.getenv('SMTPPASSWORD'))
 
 
 
