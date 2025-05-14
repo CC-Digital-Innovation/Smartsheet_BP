@@ -1,0 +1,6 @@
+loguru==0.7.3
+python-multipart==0.0.20
+smartsheet-python-sdk==3.0.4
+python-dotenv==1.0.1
+requests==2.31.0
+openpyxl==3.1.5

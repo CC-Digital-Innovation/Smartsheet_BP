@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-from loguru import logger
 from smartsheet import Smartsheet
 from smartsheet.models import (Cell, Column, Comment, Discussion, Report,
                                ReportRow, Row)
