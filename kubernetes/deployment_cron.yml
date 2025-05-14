@@ -32,7 +32,7 @@ spec:
           containers:
             - image: harbor.k3s.quokka.ninja/library/smartsheet-billing-prep:0.0.3
               name: smartsheet-billing-prep
-              args: ['/bin/bash', '-c', 'source /vault/secrets/smartsheet-billing-prep && python ./src/main.py']
+              args: ['/bin/bash', '-c', 'source /vault/secrets/smartsheet-billing-prep && python src/main.py']
           restartPolicy: Never
           serviceAccountName: smartsheet-billing-prep
       backoffLimit: 3
