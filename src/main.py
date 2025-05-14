@@ -66,7 +66,7 @@ for submission in zip(custnames, reports, trackers):
 
         #create excel template
         #column F is PO, M is month, P is Memo, S is amount, W is contract
-        workbook = openpyxl.load_workbook(PurePath('src/template.xlsx'))
+        workbook = openpyxl.load_workbook(PurePath(__file__).with_name('template.xlsx'))
         excel_sheet = workbook.active
         row_start=8
         for row in excel_rows:
