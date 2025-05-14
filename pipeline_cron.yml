@@ -76,7 +76,7 @@ jobs:
         params:
           alert_type: started
       - set_pipeline: ((pipeline))
-        file: repo-pipeline/pipeline.yml
+        file: repo-pipeline/pipeline_cron.yml
         var_files:
           - repo-pipeline/vars.yml
       - put: notifier
