@@ -106,13 +106,9 @@ def add_billable_hours(controller, row_ids, tracker_id):
         else:
             raw_hours=0.0
         hours_rounded = round(raw_hours*4)/4
-        if hours_rounded < 2 and hours_rounded != 0.0:
-            hours_rounded = 2
         raw_WM_hours = tracker_upd.get_cell_by_column_name(row, 'WM Hours').value
         if raw_WM_hours and raw_WM_hours != '#NO MATCH':
             WM_hours_rounded = round(raw_WM_hours*4)/4
-            if WM_hours_rounded < 2:
-                WM_hours_rounded =2 
             if abs(hours_rounded - WM_hours_rounded) > 1:
                 logger.debug("Major difference, rasing concern")
                 comment = "There is a discrepency greater than 1 hour between WM hours and tracked hours"
